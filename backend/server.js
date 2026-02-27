@@ -25,6 +25,16 @@ app.use(express.static(__dirname + '/../frontend-web'));
 io.on('connection', (socket) => {
     console.log(`[+] User Connected: ${socket.id}`);
 
+    // 0. Check Room Existence Before Joining
+    socket.on('check_room', (data, callback) => {
+        const exists = io.sockets.adapter.rooms.has(data.roomCode);
+        if (data.action === 'create') {
+            callback({ success: !exists, error: exists ? 'Room already exists!' : null });
+        } else if (data.action === 'join') {
+            callback({ success: exists, error: !exists ? 'Room not found!' : null });
+        }
+    });
+
     // 1. Join Room Event
     socket.on('join_room', (data) => {
         // data should be an object: { name: 'Player', room: 'CODE' }

@@ -14,9 +14,6 @@ let currentRoom = null;
 let userName = 'A PARTNER';
 let hasCausedFailure = false;
 
-// Simple red 1x1 pixel base64 image to prevent "Unable to download" errors
-const FALLBACK_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-
 // The Heartbeat: send a ping every 20 seconds to prevent the Service Worker from sleeping
 setInterval(() => {
   if (socket && socket.connected) {
@@ -69,7 +66,7 @@ socket.on('session_failed', (siteInfo) => {
     // Simplified Notification WITHOUT a custom ID, letting Chrome generate it
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: FALLBACK_ICON,
+      iconUrl: 'image_3.png',
       title: 'SESSION KILLED',
       message: `${siteInfo.culprit || 'A PARTNER'} was caught on ${formattedSite}!`,
       priority: 2
@@ -101,7 +98,7 @@ socket.on('vote_needed', (data) => {
   try {
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: FALLBACK_ICON,
+      iconUrl: 'image_3.png',
       title: 'VOTE REQUIRED!',
       message: `${data.culprit} is requesting an exception for ${data.siteTitle}!`,
       priority: 2
