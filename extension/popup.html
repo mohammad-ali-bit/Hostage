@@ -230,8 +230,37 @@
         <button id="startTimerBtn" class="btn-lock">Start Session</button>
       </div>
 
+      <button id="studySpaceBtn" class="btn-lock" style="background-color: var(--accent-color); margin-top: 16px;">Open
+        Study Space</button>
+
       <button id="newSessionBtn" class="btn-lock" style="background-color: var(--danger-color); margin-top: 16px;">Start
         New Session</button>
+    </div>
+
+    <!-- Voting View (Hidden by default) -->
+    <div id="voting-view" style="display: none; width: 100%; text-align: center;">
+      <div style="font-size: 16px; font-weight: 800; color: #ff9999; margin-bottom: 8px;">VOTING IN PROGRESS</div>
+      <div id="voteQuestion" style="font-size: 14px; margin-bottom: 16px; line-height: 1.4;">
+        [Name] wants to watch: [Site]. Allow?
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button id="btnVoteApprove" class="btn-lock" style="flex: 1;">Approve</button>
+        <button id="btnVoteReject" class="btn-lock"
+          style="flex: 1; background-color: var(--danger-color);">Reject</button>
+      </div>
+    </div>
+
+    <div id="whitelist-view"
+      style="width: 100%; margin-top: 20px; text-align: left; font-size: 11px; color: #8b949e; background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; box-sizing: border-box;">
+      <div style="color: var(--text-color); font-weight: bold; margin-bottom: 6px;">Allowed Content (via Title):</div>
+      <ul style="margin: 0; padding-left: 16px; list-style-type: square; color: var(--success-color);">
+        <li>Khan Academy</li>
+        <li>MIT OpenCourseWare</li>
+        <li>Veritasium</li>
+        <li>3Blue1Brown</li>
+        <li>Coursera</li>
+        <li>Udemy</li>
+      </ul>
     </div>
 
     <div class="privacy-badge">

@@ -16,6 +16,7 @@ const io = new Server(server, {
 // Real-time Event Handling
 const roomUsers = {}; // Maps socket.id -> name
 const roomLeaders = {}; // Maps roomCode -> socket.id of the creator
+const activeVotes = {}; // Maps roomCode -> { culprit, siteTitle, yesVotes, noVotes, totalVoters, timer }
 
 io.on('connection', (socket) => {
     console.log(`[+] User Connected: ${socket.id}`);
@@ -40,6 +41,9 @@ io.on('connection', (socket) => {
 
         // Notify the client that they successfully joined, explicitly injecting their assigned role
         socket.emit('joined_successfully', { ...data, isLeader });
+
+        // Broadcast updated user list to everyone in the room
+        broadcastRoomUsers(data.room);
     });
 
     // 2. Start Session Event
@@ -56,29 +60,129 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 3. Distraction Detected Event
-    socket.on('distraction_detected', (data) => {
-        // Fallback: If it came from the popup, use roomUsers. If from background worker, use data.culprit
-        const culpritName = roomUsers[socket.id] || data.culprit || "A PARTNER";
+    // 3. Request Exception (Voting) Event
+    socket.on('request_exception', (data) => {
+        const culpritName = roomUsers[socket.id] || data.name || "A PARTNER";
+        const roomCode = data.room;
 
-        // Broadcast failure to EVERYONE in this exact room
+        if (activeVotes[roomCode]) {
+            console.log(`[Vote] Vote already in progress for room ${roomCode}. Ignoring new request.`);
+            return;
+        }
+
+        // Calculate total voters currently in the room using Socket.io adapter
+        const roomSockets = io.sockets.adapter.rooms.get(roomCode);
+        const totalVoters = roomSockets ? roomSockets.size : 1;
+
+        console.log(`[Vote] Exception requested in room ${roomCode} by ${culpritName} for ${data.siteTitle}. Total voters: ${totalVoters}`);
+
+        activeVotes[roomCode] = {
+            culprit: culpritName,
+            siteTitle: data.siteTitle,
+            url: data.url,
+            yesVotes: 0,
+            noVotes: 0,
+            totalVoters: totalVoters,
+            votedSockets: new Set(),
+            timer: setTimeout(() => {
+                // If the 30 seconds run out without a majority, the session fails
+                if (activeVotes[roomCode]) {
+                    console.log(`[Vote] Timeout in room ${roomCode}. Session Failed.`);
+                    io.to(roomCode).emit('session_failed', { site: data.url, culprit: culpritName });
+                    delete activeVotes[roomCode];
+                }
+            }, 30000)
+        };
+
+        // Broadcast to everyone to start the voting UI
+        io.to(roomCode).emit('vote_started', { culprit: culpritName, siteTitle: data.siteTitle });
+    });
+
+    // 4. Submit Vote Event
+    socket.on('submit_vote', (payload) => {
+        // payload: { room: 'CODE', vote: 'yes' | 'no' }
+        const voteSession = activeVotes[payload.room];
+
+        if (!voteSession) return;
+        if (voteSession.votedSockets.has(socket.id)) return; // Prevent double voting
+
+        voteSession.votedSockets.add(socket.id);
+
+        if (payload.vote === 'yes') voteSession.yesVotes++;
+        else voteSession.noVotes++;
+
+        console.log(`[Vote] Room ${payload.room}: Yes(${voteSession.yesVotes}) No(${voteSession.noVotes}) / Total(${voteSession.totalVoters})`);
+
+        // Check if a majority threshold is hit
+        const majority = Math.floor(voteSession.totalVoters / 2) + 1;
+
+        if (voteSession.yesVotes >= majority) {
+            console.log(`[Vote] Exception GRANTED in room ${payload.room}`);
+            clearTimeout(voteSession.timer);
+            io.to(payload.room).emit('exception_granted', { culprit: voteSession.culprit });
+            delete activeVotes[payload.room];
+        }
+        else if (voteSession.noVotes >= majority || (voteSession.yesVotes + voteSession.noVotes === voteSession.totalVoters)) {
+            // If 'No' hits majority, or everyone voted but 'Yes' didn't win
+            console.log(`[Vote] Exception REJECTED in room ${payload.room}. Session Failed.`);
+            clearTimeout(voteSession.timer);
+            io.to(payload.room).emit('session_failed', { site: voteSession.url, culprit: voteSession.culprit });
+            delete activeVotes[payload.room];
+        }
+    });
+
+    // 5. Chat Message Event (Web App Integration)
+    socket.on('chat_message', (payload) => {
+        // payload: { room: 'CODE', message: 'Hello' }
+        const senderName = roomUsers[socket.id] || "Unknown";
+        io.to(payload.room).emit('chat_message', {
+            name: senderName,
+            message: payload.message,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+    });
+
+    // 6. Hard Distraction Detected (Legacy / Fallback)
+    socket.on('distraction_detected', (data) => {
+        const culpritName = roomUsers[socket.id] || data.culprit || "A PARTNER";
         io.to(data.room).emit('session_failed', { site: data.site, culprit: culpritName });
-        console.log(`[🚨 ALERT] Distraction detected in room ${data.room} by ${culpritName} on site ${data.site}! Emitting 'session_failed'.`);
+        console.log(`[🚨 ALERT] Hard Distraction in room ${data.room} by ${culpritName}! Emitting 'session_failed'.`);
     });
 
     socket.on('disconnect', () => {
         console.log(`[-] User Disconnected: ${socket.id}`);
+        const userName = roomUsers[socket.id];
         delete roomUsers[socket.id];
 
-        // Clean up leader roles if the leader disconnects
+        // Find which rooms this socket was in to broadcast the disconnect
+        // (Socket.io automatically removes them from rooms upon disconnect, so we check leaders/manual state)
         for (const [room, leaderId] of Object.entries(roomLeaders)) {
+            // Clean up leader roles if the leader disconnects
             if (leaderId === socket.id) {
                 delete roomLeaders[room];
                 console.log(`[Room] Leader left room ${room}. Room is effectively orphaned.`);
             }
+            // Always try to broadcast a user list update for any room they might have been in
+            broadcastRoomUsers(room);
         }
     });
 });
+
+// Helper Function: Broadcast active users in a room
+function broadcastRoomUsers(roomCode) {
+    const roomSockets = io.sockets.adapter.rooms.get(roomCode);
+    if (!roomSockets) return; // Room is empty
+
+    const currentUsers = [];
+    for (const sid of roomSockets) {
+        if (roomUsers[sid]) {
+            currentUsers.push({ id: sid, name: roomUsers[sid], isLeader: roomLeaders[roomCode] === sid });
+        }
+    }
+
+    io.to(roomCode).emit('room_users_update', currentUsers);
+    console.log(`[Room Sync] Broadcasted ${currentUsers.length} users to room ${roomCode}`);
+}
 
 // Setup Basic Healthcheck Route
 app.get('/', (req, res) => {

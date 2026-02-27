@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Check and request Notification permissions immediately
+    chrome.notifications.getPermissionLevel((level) => {
+        console.log('Notification permission level:', level);
+        if (level !== 'granted') {
+            Notification.requestPermission().then((permission) => {
+                console.log('Requested permission:', permission);
+            });
+        }
+    });
+
     let socket = null;
 
     const roomInput = document.getElementById('roomCode');
@@ -8,7 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusBox = document.getElementById('statusBox');
     const authView = document.getElementById('auth-view');
     const sessionView = document.getElementById('session-view');
+    const votingView = document.getElementById('voting-view');
+    const voteQuestion = document.getElementById('voteQuestion');
+    const btnVoteApprove = document.getElementById('btnVoteApprove');
+    const btnVoteReject = document.getElementById('btnVoteReject');
     const leaderControls = document.getElementById('leaderControls');
+    const studySpaceBtn = document.getElementById('studySpaceBtn');
     const studyMinutesInput = document.getElementById('studyMinutes');
     const startTimerBtn = document.getElementById('startTimerBtn');
 
@@ -75,6 +90,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 startCountdown(payload.minutes);
             });
 
+            socket.on('vote_started', (data) => {
+                console.log('Vote started!', data);
+                sessionView.style.display = 'none';
+                votingView.style.display = 'block';
+                voteQuestion.textContent = `${data.culprit} wants to watch: ${data.siteTitle}. Allow?`;
+
+                // Re-enable buttons in case they were disabled from a previous vote
+                btnVoteApprove.style.opacity = '1';
+                btnVoteApprove.style.pointerEvents = 'auto';
+                btnVoteReject.style.opacity = '1';
+                btnVoteReject.style.pointerEvents = 'auto';
+            });
+
+            socket.on('exception_granted', (data) => {
+                console.log('Exception granted for', data.culprit);
+                votingView.style.display = 'none';
+                sessionView.style.display = 'block';
+                showStatus(`User ${data.culprit} was granted a 10-min pass.`, true);
+            });
+
             socket.on('session_failed', (siteInfo) => {
                 console.log('Session failed from server broadcast!', siteInfo);
 
@@ -89,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 statusBox.className = 'status-box visible';
 
+                votingView.style.display = 'none'; // Ensure voting view is closed if Open
                 newSessionBtn.style.display = 'block';
             });
         }
@@ -99,8 +135,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset any failed states visually
         document.body.classList.remove('failed-state');
         authView.style.display = 'none';
+        votingView.style.display = 'none';
         sessionView.style.display = 'block';
     }
+
+    // --- Button Event Listeners ---
+
+    function submitVote(voteValue) {
+        if (socket && currentRoomCode) {
+            socket.emit('submit_vote', { room: currentRoomCode, vote: voteValue });
+
+            // Give visual feedback that vote was cast and prevent double voting
+            btnVoteApprove.style.opacity = '0.5';
+            btnVoteApprove.style.pointerEvents = 'none';
+            btnVoteReject.style.opacity = '0.5';
+            btnVoteReject.style.pointerEvents = 'none';
+            voteQuestion.textContent = `Vote submitted! Waiting for others...`;
+        }
+    }
+
+    if (btnVoteApprove) btnVoteApprove.addEventListener('click', () => submitVote('yes'));
+    if (btnVoteReject) btnVoteReject.addEventListener('click', () => submitVote('no'));
 
     // Leader starting the Timer
     startTimerBtn.addEventListener('click', () => {
@@ -116,6 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
             leaderControls.style.display = 'none';
         }
     });
+
+    // Handle Open Study Space
+    if (studySpaceBtn) {
+        studySpaceBtn.addEventListener('click', () => {
+            const roomHash = currentRoomCode ? `#room=${currentRoomCode}` : '';
+            window.open(`https://excalidraw.com/${roomHash}`, '_blank');
+        });
+    }
 
     // Handle Start New Session
     newSessionBtn.addEventListener('click', () => {
