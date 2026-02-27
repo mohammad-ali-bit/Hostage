@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const joinBtn = document.getElementById('joinBtn');
 
     // Hub
-    const userList = document.getElementById('userList');
+    const userList = document.getElementById('active-hostages-list');
     const chatMessages = document.getElementById('chat-messages');
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
