@@ -17,6 +17,10 @@ const io = new Server(server, {
 const roomUsers = {}; // Maps socket.id -> name
 const roomLeaders = {}; // Maps roomCode -> socket.id of the creator
 const activeVotes = {}; // Maps roomCode -> { culprit, siteTitle, yesVotes, noVotes, totalVoters, timer }
+const chatHistory = {}; // Maps roomCode -> Array of message objects
+
+// Serve the frontend web app statically from /frontend-web
+app.use(express.static(__dirname + '/../frontend-web'));
 
 io.on('connection', (socket) => {
     console.log(`[+] User Connected: ${socket.id}`);
@@ -41,6 +45,15 @@ io.on('connection', (socket) => {
 
         // Notify the client that they successfully joined, explicitly injecting their assigned role
         socket.emit('joined_successfully', { ...data, isLeader });
+
+        // Initialize chat history tracking for this room if missing
+        if (!chatHistory[data.room]) {
+            chatHistory[data.room] = [];
+        }
+
+        // Send limited history directly to the joining socket (last 50 messages)
+        const roomHistory = chatHistory[data.room];
+        socket.emit('history_load', roomHistory.slice(-50));
 
         // Broadcast updated user list to everyone in the room
         broadcastRoomUsers(data.room);
@@ -95,7 +108,7 @@ io.on('connection', (socket) => {
         };
 
         // Broadcast to everyone to start the voting UI
-        io.to(roomCode).emit('vote_started', { culprit: culpritName, siteTitle: data.siteTitle });
+        io.to(roomCode).emit('vote_needed', { culprit: culpritName, siteTitle: data.siteTitle });
     });
 
     // 4. Submit Vote Event
@@ -135,11 +148,21 @@ io.on('connection', (socket) => {
     socket.on('chat_message', (payload) => {
         // payload: { room: 'CODE', message: 'Hello' }
         const senderName = roomUsers[socket.id] || "Unknown";
-        io.to(payload.room).emit('chat_message', {
+
+        const messageData = {
             name: senderName,
             message: payload.message,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
+        };
+
+        // Persist message to room history
+        if (!chatHistory[payload.room]) {
+            chatHistory[payload.room] = [];
+        }
+        chatHistory[payload.room].push(messageData);
+
+        // Broadcast using io.in to ensure all clients in room receive it
+        io.in(payload.room).emit('chat_message', messageData);
     });
 
     // 6. Hard Distraction Detected (Legacy / Fallback)
@@ -185,7 +208,7 @@ function broadcastRoomUsers(roomCode) {
 }
 
 // Setup Basic Healthcheck Route
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
     res.send('Hostage WebSocket Server is Running.');
 });
 

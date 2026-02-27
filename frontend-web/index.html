@@ -4,282 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Hostage Study Hub</title>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --panel-bg: #161b22;
-            --text-color: #c9d1d9;
-            --border-color: #30363d;
-            --accent-color: #58a6ff;
-            --accent-hover: #3182ce;
-            --danger-color: #f85149;
-            --success-color: #238636;
-            --success-hover: #2ea043;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            padding: 20px 40px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--panel-bg);
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: #ffffff;
-            text-transform: uppercase;
-        }
-
-        .main-container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* Auth View */
-        #auth-view {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        .auth-box {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 40px;
-            width: 400px;
-            text-align: center;
-        }
-
-        .input-code {
-            width: 100%;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 16px;
-            text-align: center;
-            font-weight: bold;
-            letter-spacing: 2px;
-            box-sizing: border-box;
-            margin-bottom: 16px;
-            outline: none;
-        }
-
-        .input-code:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
-        }
-
-        .btn-lock {
-            width: 100%;
-            background-color: var(--success-color);
-            color: #ffffff;
-            border: 1px solid rgba(240, 246, 252, 0.1);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-lock:hover {
-            background-color: var(--success-hover);
-        }
-
-        /* Hub View */
-        #hub-view {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Sidebar / Roster */
-        .sidebar {
-            width: 250px;
-            border-right: 1px solid var(--border-color);
-            background-color: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .sidebar h2 {
-            font-size: 14px;
-            text-transform: uppercase;
-            color: #8b949e;
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        .user-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .user-item {
-            padding: 10px;
-            margin-bottom: 8px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .user-item.leader {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        /* Chat Area */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-color);
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .message {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            border-radius: 8px;
-            max-width: 80%;
-            align-self: flex-start;
-        }
-
-        .message.system {
-            align-self: center;
-            background-color: transparent;
-            border: none;
-            color: #8b949e;
-            font-size: 13px;
-        }
-
-        .message-header {
-            font-size: 12px;
-            color: #8b949e;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .chat-input-area {
-            padding: 20px;
-            border-top: 1px solid var(--border-color);
-            background-color: var(--panel-bg);
-            display: flex;
-            gap: 12px;
-        }
-
-        .chat-input-area input {
-            flex: 1;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .chat-input-area input:focus {
-            border-color: var(--accent-color);
-        }
-
-        /* Voting Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(13, 17, 23, 0.85);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--danger-color);
-            box-shadow: 0 0 20px rgba(248, 81, 73, 0.2);
-            border-radius: 12px;
-            padding: 40px;
-            width: 500px;
-            text-align: center;
-            animation: popIn 0.3s ease-out;
-        }
-
-        @keyframes popIn {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .modal-content h2 {
-            color: var(--danger-color);
-            margin-top: 0;
-            font-size: 20px;
-            text-transform: uppercase;
-        }
-
-        .modal-content p {
-            font-size: 18px;
-            line-height: 1.5;
-            margin-bottom: 24px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 16px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -302,28 +27,35 @@
             </div>
         </div>
 
-        <!-- Hub View -->
-        <div id="hub-view">
-            <div class="sidebar">
-                <h2>Active Hostages</h2>
-                <ul id="userList" class="user-list">
-                    <!-- Users dynamically populated -->
-                </ul>
+        <!-- Hub View (Split Screen Layout) -->
+        <div id="hub-view" class="study-hub-container">
+            <!-- Left Panel (30%) -->
+            <div class="chat-panel">
+                <div class="sidebar">
+                    <h2>Active Hostages</h2>
+                    <ul id="userList" class="user-list">
+                        <!-- Users dynamically populated -->
+                    </ul>
+                </div>
+
+                <h3 id="room-display">Room: Waiting...</h3>
+                <div id="chat-messages"
+                    style="flex-grow: 1; overflow-y: auto; padding: 10px; background: #f9f9f9; color: #000;"></div>
+                <div style="padding: 10px; display: flex; gap: 5px;">
+                    <input type="text" id="chat-input" placeholder="Type a message or ?doubt..."
+                        style="flex-grow: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc; color: #000;">
+                    <button id="send-btn" class="btn-lock" style="width: auto; padding: 8px 16px;">Send</button>
+                </div>
             </div>
 
-            <div class="chat-area">
-                <div id="chatMessages" class="chat-messages">
-                    <div class="message system">Welcome to the Study Hub. Drop doubts here.</div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="Type a message to the room..." autocomplete="off">
-                    <button id="sendBtn" class="btn-lock" style="width: auto; padding: 12px 24px;">Send</button>
-                </div>
+            <!-- Right Panel (70%) -->
+            <div class="whiteboard-panel">
+                <iframe id="excalidrawFrame" src="https://excalidraw.com"></iframe>
             </div>
         </div>
     </div>
 
-    <!-- Voting Modal -->
+    <!-- Voting Modal (z-index: 9999, absolute positioned) -->
     <div id="votingModal" class="modal-overlay">
         <div class="modal-content">
             <h2>DEMOCRATIC EXCEPTION: VOTE REQUIRED</h2>
@@ -336,7 +68,7 @@
         </div>
     </div>
 
-    <!-- We load Socket.io via unpkg for the web frontend -->
+    <!-- Load Socket.io via unpkg for the web frontend -->
     <script src="https://unpkg.com/socket.io-client@4.7.4/dist/socket.io.min.js"></script>
     <script src="app.js"></script>
 </body>

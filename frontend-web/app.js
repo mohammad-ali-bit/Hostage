@@ -14,15 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hub
     const userList = document.getElementById('userList');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
 
     // Voting Modal
     const votingModal = document.getElementById('votingModal');
     const voteModalText = document.getElementById('voteModalText');
     const btnVoteYes = document.getElementById('btnVoteYes');
     const btnVoteNo = document.getElementById('btnVoteNo');
+
+    // Auto-Join from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlName = urlParams.get('name');
+    const urlRoom = urlParams.get('room');
+
+    if (urlName && urlRoom) {
+        currentRoomCode = urlRoom;
+        initSocket(urlName, urlRoom);
+    }
 
     // Join logic
     joinBtn.addEventListener('click', () => {
@@ -49,9 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('joined_successfully', (data) => {
             authView.style.display = 'none';
-            hubView.style.display = 'flex';
-            roomStatus.textContent = `ROOM: ${data.room}`;
-            roomStatus.style.color = 'var(--success-color)';
+            hubView.style.display = 'flex'; // This now overrides the 'display: none' in CSS
+
+            const roomDisplay = document.getElementById('room-display');
+            if (roomDisplay) {
+                roomDisplay.textContent = `Room: ${data.room}`;
+                roomDisplay.style.color = 'var(--success-color)';
+            }
+
+            // Link the Excalidraw iframe securely to the synced room code
+            const excalidrawFrame = document.getElementById('excalidrawFrame');
+            if (excalidrawFrame) {
+                excalidrawFrame.src = `https://excalidraw.com/#room=${data.room}`;
+            }
         });
 
         // 1. Sync User Roster
@@ -68,14 +88,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // 1.5 Sync Chat History
+        socket.on('history_load', (history) => {
+            history.forEach(msg => {
+                appendMessage(msg.name, msg.message, msg.time);
+            });
+        });
+
         // 2. Chat Sync
         socket.on('chat_message', (payload) => {
             appendMessage(payload.name, payload.message, payload.time);
         });
 
         // 3. Voting System
-        socket.on('vote_started', (data) => {
-            console.log('Vote started for:', data.siteTitle);
+        socket.on('vote_needed', (data) => {
+            console.log('Vote needed for:', data.siteTitle);
             votingModal.style.display = 'flex';
             voteModalText.textContent = `${data.culprit} wants to watch: ${data.siteTitle}. Allow?`;
 

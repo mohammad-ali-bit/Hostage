@@ -94,6 +94,23 @@ socket.on('session_failed', (siteInfo) => {
   }
 });
 
+socket.on('vote_needed', (data) => {
+  console.log(`[Hostage] Received vote_needed for ${data.culprit} on ${data.siteTitle}`);
+
+  // Notify the user they need to go vote
+  try {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: FALLBACK_ICON,
+      title: 'VOTE REQUIRED!',
+      message: `${data.culprit} is requesting an exception for ${data.siteTitle}!`,
+      priority: 2
+    });
+  } catch (err) {
+    console.error('[Hostage] Caught err creating vote notification:', err);
+  }
+});
+
 // Comprehensive list of distraction domains
 const BLACKLIST = ['youtube.com', 'instagram.com', 'tiktok.com', 'facebook.com', 'twitter.com', 'x.com', 'reddit.com', 'netflix.com'];
 const WHITELIST_TITLES = ['Khan Academy', 'MIT OpenCourseWare', 'Veritasium', '3Blue1Brown', 'Coursera', 'Udemy'];
@@ -134,5 +151,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     } catch (e) {
       console.error('Invalid URL error:', e);
     }
+  }
+});
+
+// Listener for messages from popup.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'open_study_hub') {
+    chrome.tabs.create({ url: request.url });
   }
 });
