@@ -1,0 +1,22 @@
+{
+    "manifest_version": 3,
+    "name": "Hostage",
+    "version": "0.1.0",
+    "description": "Hostage: Synchronized study session extension to keep you locked in.",
+    "permissions": [
+        "tabs",
+        "storage",
+        "notifications",
+        "alarms"
+    ],
+    "host_permissions": [
+        "http://localhost:3000/*",
+        "ws://localhost:3000/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
