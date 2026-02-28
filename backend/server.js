@@ -149,6 +149,13 @@ io.on('connection', (socket) => {
             delete activeVotes[room];
         }
     });
+    // Example in server.js
+    const io = require("socket.io")(server, {
+        cors: {
+            origin: "https://hostage-hub.onrender.com",
+            methods: ["GET", "POST"]
+        }
+    });
 });
 
 server.listen(3000, '0.0.0.0', () => {

@@ -1,5 +1,9 @@
-const SERVER_URL = 'http://10.17.46.239:3000';
-const socket = io(SERVER_URL);
+const SERVER_URL = 'https://hostage-hub.onrender.com';
+const socket = io(SERVER_URL
+    , {
+        transports: ["websocket", "polling"] // Ensures compatibility
+    });
+
 
 document.getElementById('btnCreate').onclick = () => {
     const room = document.getElementById('extRoom').value;
