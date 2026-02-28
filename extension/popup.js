@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (socket) socket.emit('start_session', code);
 
             // Intelligence: Auto-Open Web Hub via Background Script
-            chrome.runtime.sendMessage({ action: 'open_study_hub', url: 'http://localhost:3000/?name=' + encodeURIComponent(name) + '&room=' + encodeURIComponent(code) });
+            chrome.runtime.sendMessage({ action: 'open_study_hub', url: 'http://10.17.46.239:3000?name=' + encodeURIComponent(name) + '&room=' + encodeURIComponent(code) });
         });
     });
 
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // When a user successfully joins the room
     function joinSession(name, code) {
         if (!socket) {
-            socket = io('http://localhost:3000', {
+            socket = io('http://10.17.46.239:3000', {
                 transports: ['websocket'],
             });
 
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const name = nameInput.value.trim() || 'Unknown';
             const roomID = currentRoomCode;
             if (roomID) {
-                chrome.runtime.sendMessage({ action: 'open_study_hub', url: 'http://localhost:3000/?name=' + encodeURIComponent(name) + '&room=' + encodeURIComponent(roomID) });
+                chrome.runtime.sendMessage({ action: 'open_study_hub', url: 'http://10.17.46.239:3000?name=' + encodeURIComponent(name) + '&room=' + encodeURIComponent(roomID) });
             }
         });
     }

@@ -2,17 +2,19 @@
 // Note: In a production build, you'd use a bundler, but for this vanilla MVP, we use importScripts
 importScripts('socket.io.js');
 
-console.log('[Hostage] Socket attempt: Connecting to http://localhost:3000');
+const SERVER_URL = 'http://10.17.46.239:3000';
+console.log('[Hostage] Socket attempt: Connecting to ' + SERVER_URL);
 
 // Connect to the local Node.js WebSocket server
 // { transports: ['websocket'] } is critical for Manifest V3 Service Workers
-const socket = io('http://localhost:3000', {
+const socket = io(SERVER_URL, {
   transports: ['websocket'],
 });
 
 let currentRoom = null;
 let userName = 'A PARTNER';
 let hasCausedFailure = false;
+let currentMode = 'work'; // Default to work mode
 
 // The Heartbeat: send a ping every 20 seconds to prevent the Service Worker from sleeping
 setInterval(() => {
@@ -51,6 +53,16 @@ socket.on('connect', () => {
 
 socket.on('disconnect', () => {
   console.log('[Hostage] Socket disconnected from server');
+});
+
+socket.on('timer_update', (data) => {
+  currentMode = data.mode; // 'work' or 'break'
+  console.log("Syncing Extension Mode:", currentMode);
+
+  // Update the extension badge text so the user can see the timer on the icon!
+  const mins = Math.floor(data.timeLeft / 60);
+  chrome.action.setBadgeText({ text: mins.toString() });
+  chrome.action.setBadgeBackgroundColor({ color: data.mode === 'break' ? '#22c55e' : '#ef4444' });
 });
 
 // Top-Level Listener for session failure
@@ -116,6 +128,13 @@ const WHITELIST_TITLES = ['Khan Academy', 'MIT OpenCourseWare', 'Veritasium', '3
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Wait for the page to fully load so the title is available
   if (changeInfo.status === 'complete' && tab.url && currentRoom) {
+
+    // If we are on a break, ignore all distraction attempts
+    if (currentMode === 'break') {
+      console.log("Break active. Ignoring distraction.");
+      return;
+    }
+
     try {
       const url = new URL(tab.url);
       const fullUrlStr = url.href.toLowerCase();
