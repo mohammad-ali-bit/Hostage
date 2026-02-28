@@ -1,43 +1,29 @@
-<!DOCTYPE html>
-<html>
+<div style="width: 250px; padding: 15px; background: #12121a; color: white; font-family: sans-serif;">
+  <h3 style="margin: 0 0 15px 0; color: #ef4444; text-align: center;">HOSTAGE HUB</h3>
 
-<head>
-  <meta charset="UTF-8">
-  <title>Hostage Hub</title>
-</head>
+  <div id="main-section">
+    <input type="text" id="extName" placeholder="Your Name"
+      style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white;">
+    <input type="text" id="extRoom" placeholder="Room Code"
+      style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white;">
 
-<body style="margin: 0; padding: 0; background: #12121a; color: white; font-family: sans-serif;">
-  <div style="width: 300px; padding: 15px;">
-    <h3 style="margin-top: 0; color: #ef4444; border-bottom: 1px solid #333; padding-bottom: 10px;">🛡️ HOSTAGE HUB</h3>
-
-    <div id="setup-section">
-      <input type="text" id="extName" placeholder="Your Name"
-        style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white; box-sizing: border-box; border-radius: 4px;">
-      <input type="text" id="extRoom" placeholder="Room Code"
-        style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white; box-sizing: border-box; border-radius: 4px;">
-
-      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-        <button id="btnJoin"
-          style="flex: 1; padding: 10px; background: #3b82f6; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px;">Join
-          Study Space</button>
-        <button id="btnCreate"
-          style="flex: 1; padding: 10px; background: #10b981; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px;">Create
-          Study Space</button>
-      </div>
-    </div>
-
-    <div id="start-section" style="display: none;">
-      <p style="font-size: 0.9em; margin-bottom: 10px; color: #aaa;">Configure new room timers:</p>
-      <input type="number" id="extWork" placeholder="Work Time (mins)" value="25"
-        style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white; box-sizing: border-box; border-radius: 4px;">
-      <input type="number" id="extBreak" placeholder="Break Time (mins)" value="5"
-        style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white; box-sizing: border-box; border-radius: 4px;">
-      <button id="btnStart"
-        style="width: 100%; padding: 10px; background: #ef4444; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px;">Start</button>
+    <div style="display: flex; gap: 10px;" id="action-buttons">
+      <button id="btnJoin"
+        style="flex: 1; padding: 10px; background: #3b82f6; border: none; color: white; cursor: pointer; font-weight: bold;">Join</button>
+      <button id="btnCreate"
+        style="flex: 1; padding: 10px; background: #ef4444; border: none; color: white; cursor: pointer; font-weight: bold;">Create</button>
     </div>
   </div>
-  <script src="socket.io.js"></script>
-  <script src="popup.js"></script>
-</body>
 
-</html>
+  <div id="start-section" style="display: none; margin-top: 15px; border-top: 1px solid #444; padding-top: 15px;">
+    <input type="number" id="extWork" placeholder="Work Mins (e.g. 25)"
+      style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white;">
+    <input type="number" id="extBreak" placeholder="Break Mins (e.g. 5)"
+      style="width: 100%; margin-bottom: 10px; padding: 8px; background: #222; border: 1px solid #444; color: white;">
+    <button id="btnStart"
+      style="width: 100%; padding: 10px; background: #22c55e; border: none; color: white; font-weight: bold; cursor: pointer;">Start
+      Session</button>
+  </div>
+</div>
+<script src="socket.io.js"></script>
+<script src="popup.js"></script>

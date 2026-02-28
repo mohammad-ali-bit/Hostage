@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SERVER_URL = 'http://10.17.46.239:3000';
     const socket = io(SERVER_URL);
     let currentRoomCode = null;
+    window.currentUserName = null;
 
     // DOM Elements
     const authView = document.getElementById('auth-view');
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoAction = urlParams.get('action');
 
     if (autoName && autoRoom) {
+        window.currentUserName = autoName;
         currentRoomCode = autoRoom.toUpperCase();
         if (autoAction === 'create') {
             const work = parseInt(urlParams.get('work')) || 25;
@@ -56,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!room) return;
         const name = prompt("Enter your Name:");
         if (!name) return;
+        window.currentUserName = name;
         currentRoomCode = room.toUpperCase();
         socket.emit('join_existing_room', { room: currentRoomCode, name: name });
     };
@@ -63,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createRoomBtn.onclick = () => {
         const name = prompt("Enter your Name:");
         if (!name) return;
+        window.currentUserName = name;
         const workMins = parseInt(prompt("Enter Work Mins (e.g., 25):")) || 25;
         const breakMins = parseInt(prompt("Enter Break Mins (e.g., 5):")) || 5;
         currentRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -71,10 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('error', (msg) => alert(msg));
 
-    socket.on('room_users', (users) => {
-        const userList = document.getElementById('active-hostages-list');
-        if (userList) userList.innerHTML = users.map(u => `<li style="margin-bottom: 5px;">👤 ${u}</li>`).join('');
-    });
+    // Deleted old room_users listener to prevent format conflicts
 
 
     socket.on('connect', () => {
@@ -132,6 +133,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('break_warning', () => {
+        // 1. Native Desktop Notification
+        if (Notification.permission === 'granted') {
+            new Notification("⚠️ BREAK ENDING", { body: "30 seconds left! Wrap up your break.", icon: "image_3.png" });
+        }
+
+        // 2. Gentle Audio Cue (Different pitch from the vote alarm)
+        try {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            osc.connect(gain);
+            gain.connect(context.destination);
+            osc.type = 'sine';
+            osc.frequency.value = 600; // Mid-tone beep
+            gain.gain.setValueAtTime(0.1, context.currentTime);
+            osc.start();
+            setTimeout(() => osc.stop(), 400);
+        } catch (e) { console.error("Audio failed", e); }
+
         // Re-use our Toast notification logic
         const toastBox = document.getElementById('toast-container');
         if (toastBox) {
@@ -145,14 +165,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Sync User Roster
     socket.on('room_users_update', (users) => {
-        const ul = document.getElementById('active-hostages-list');
-        if (!ul) return;
-        ul.innerHTML = '';
-        users.forEach(name => {
+        // Ensure we are targeting the correct list ID
+        const userList = document.getElementById('active-hostages-list') || document.getElementById('user-list');
+        if (!userList) return;
+
+        userList.innerHTML = '';
+
+        users.forEach(user => {
             const li = document.createElement('li');
-            li.style.marginBottom = '5px';
-            li.textContent = '\uD83D\uDC64 ' + name;
-            ul.appendChild(li);
+            // Add some inline styling for a polished look
+            li.style.cssText = 'padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 15px;';
+
+            // Differentiate the host with a crown and a gold color
+            const icon = user.isLeader ? '👑' : '👤';
+            const color = user.isLeader ? '#f59e0b' : '#e2e8f0';
+            const hostTag = user.isLeader ? '<span style="font-size: 10px; background: #f59e0b; color: #000; padding: 2px 5px; border-radius: 4px; margin-left: auto;">HOST</span>' : '';
+
+            li.innerHTML = `
+                <span style="font-size: 1.2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${icon}</span> 
+                <span style="color: ${color}; letter-spacing: 0.5px;">${user.name}</span>
+                ${hostTag}
+            `;
+
+            userList.appendChild(li);
         });
     });
 
@@ -363,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatInput.value = '';
                 return;
             }
-            socket.emit('chat_message', { room: currentRoomCode, message: msg });
+            socket.emit('chat_message', { room: currentRoomCode, name: window.currentUserName, message: msg });
             chatInput.value = '';
         }
     }

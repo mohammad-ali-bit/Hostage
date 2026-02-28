@@ -49,61 +49,60 @@ io.on('connection', (socket) => {
         for (const room in roomUsers) {
             const index = roomUsers[room].findIndex(u => u.id === socket.id);
             if (index !== -1) {
+                const wasLeader = roomUsers[room][index].isLeader;
                 roomUsers[room].splice(index, 1);
-                const names = roomUsers[room].map(u => u.name);
-                io.to(room).emit('room_users', names);
-                io.to(room).emit('room_users_update', names);
+                // Reassign leader if the host leaves
+                if (wasLeader && roomUsers[room].length > 0) roomUsers[room][0].isLeader = true;
+                io.to(room).emit('room_users_update', roomUsers[room]);
             }
         }
     });
 
     socket.on('check_room', (data) => {
-        const exists = existingRooms.has(data.roomCode);
+        const roomCode = (data.roomCode || data.room || '').toUpperCase();
+        const exists = existingRooms.has(roomCode);
         socket.emit('room_status', { exists: exists, action: data.action });
     });
 
     socket.on('create_room', (data) => {
-        if (existingRooms.has(data.room)) {
+        const roomCode = (data.room || '').toUpperCase();
+        if (existingRooms.has(roomCode)) {
             socket.emit('error', 'Room already exists!');
         } else {
-            existingRooms.add(data.room);
-            socket.join(data.room);
-            if (!roomUsers[data.room]) roomUsers[data.room] = [];
-            roomUsers[data.room].push({ id: socket.id, name: data.name });
-            const names = roomUsers[data.room].map(u => u.name);
-            io.to(data.room).emit('room_users', names);
-            io.to(data.room).emit('room_users_update', names);
-            startTimer(data.room, data.workMins, 'work');
-            socket.emit('joined_successfully', { room: data.room, name: data.name });
-            console.log(`[JOIN] create_room: socket=${socket.id} name=${data.name} room=${data.room} roomSize=${io.sockets.adapter.rooms.get(data.room)?.size}`);
+            existingRooms.add(roomCode);
+            socket.join(roomCode);
+            // Add user as leader
+            roomUsers[roomCode] = [{ name: data.name, isLeader: true, id: socket.id }];
+
+            startTimer(roomCode, data.workMins || 25, 'work');
+            socket.emit('joined_successfully', { room: roomCode, name: data.name });
+            io.to(roomCode).emit('room_users_update', roomUsers[roomCode]);
         }
     });
 
     socket.on('join_existing_room', (data) => {
-        if (!existingRooms.has(data.room)) {
+        const roomCode = (data.room || '').toUpperCase();
+        if (!existingRooms.has(roomCode)) {
             socket.emit('error', 'Room does not exist!');
         } else {
-            socket.join(data.room);
-            if (!roomUsers[data.room]) roomUsers[data.room] = [];
-            roomUsers[data.room].push({ id: socket.id, name: data.name });
-            const names = roomUsers[data.room].map(u => u.name);
-            io.to(data.room).emit('room_users', names);
-            io.to(data.room).emit('room_users_update', names);
-            socket.emit('joined_successfully', { room: data.room, name: data.name });
-            console.log(`[JOIN] join_existing_room: socket=${socket.id} name=${data.name} room=${data.room} roomSize=${io.sockets.adapter.rooms.get(data.room)?.size}`);
+            socket.join(roomCode);
+            if (!roomUsers[roomCode]) roomUsers[roomCode] = [];
+            // Add user as regular member
+            roomUsers[roomCode].push({ name: data.name, isLeader: roomUsers[roomCode].length === 0, id: socket.id });
+
+            socket.emit('joined_successfully', { room: roomCode, name: data.name });
+            io.to(roomCode).emit('room_users_update', roomUsers[roomCode]);
         }
     });
 
+    socket.on('chat_message', (data) => {
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        io.to(data.room).emit('chat_message', { name: data.name, message: data.message, time: time });
+    });
+
     socket.on('join_room', (data) => {
-        socket.join(data.room);
-        if (!roomUsers[data.room]) roomUsers[data.room] = [];
-        if (!roomUsers[data.room].find(u => u.id === socket.id)) {
-            roomUsers[data.room].push({ id: socket.id, name: data.name });
-            const names = roomUsers[data.room].map(u => u.name);
-            io.to(data.room).emit('room_users', names);
-            io.to(data.room).emit('room_users_update', names);
-        }
-        console.log(`[JOIN] join_room (extension): socket=${socket.id} name=${data.name} room=${data.room} roomSize=${io.sockets.adapter.rooms.get(data.room)?.size}`);
+        const roomCode = (data.room || '').toUpperCase();
+        socket.join(roomCode);
     });
 
     socket.on('set_timer', (data) => {
