@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Notification.permission !== 'granted') Notification.requestPermission();
 
     // Connect to the backend server immediately for checks and events
-    const SERVER_URL = 'https://hostage-hub.onrender.com';
+    const SERVER_URL = 'https://hostage-qj13.onrender.com';
     const socket = io(SERVER_URL, {
         transports: ["websocket", "polling"] // Ensures compatibility
     });
@@ -56,23 +56,48 @@ document.addEventListener('DOMContentLoaded', () => {
     createRoomBtn.innerText = 'Start New Session';
 
     joinRoomBtn.onclick = () => {
-        const room = prompt("Enter Room ID to join:");
-        if (!room) return;
-        const name = prompt("Enter your Name:");
-        if (!name) return;
+        // 1. Grab Name and Room from your HTML inputs (Replace 'name-input' and 'room-input' with your actual IDs)
+        const name = document.getElementById('name-input').value.trim();
+        const room = document.getElementById('room-input').value.trim();
+
+        if (!name || !room) {
+            alert("Please enter both your Name and a Room ID to join!");
+            return;
+        }
+
         window.currentUserName = name;
         currentRoomCode = room.toUpperCase();
+
         socket.emit('join_existing_room', { room: currentRoomCode, name: name });
     };
 
     createRoomBtn.onclick = () => {
-        const name = prompt("Enter your Name:");
-        if (!name) return;
+        const name = document.getElementById('name-input').value.trim();
+        let room = document.getElementById('room-input').value.trim();
+
+        if (!name) {
+            alert("Please enter your Name first!");
+            return;
+        }
+
+
+        if (!room) {
+            room = Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
         window.currentUserName = name;
+        currentRoomCode = room.toUpperCase();
+
+
         const workMins = parseInt(prompt("Enter Work Mins (e.g., 25):")) || 25;
         const breakMins = parseInt(prompt("Enter Break Mins (e.g., 5):")) || 5;
-        currentRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        socket.emit('create_room', { room: currentRoomCode, name: name, workMins: workMins, breakMins: breakMins });
+
+        socket.emit('create_room', {
+            room: currentRoomCode,
+            name: name,
+            workMins: workMins,
+            breakMins: breakMins
+        });
     };
 
     socket.on('error', (msg) => alert(msg));

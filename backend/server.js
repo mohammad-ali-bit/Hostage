@@ -5,8 +5,12 @@ const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
-
+const io = require("socket.io")(server, {
+    cors: {
+        origin: "https://hostage-qj13.onrender.com",
+        methods: ["GET", "POST"]
+    }
+});
 const path = require('path');
 // Serve all files from the frontend-web folder
 app.use(express.static(path.join(__dirname, '../frontend-web')));
@@ -150,14 +154,10 @@ io.on('connection', (socket) => {
         }
     });
     // Example in server.js
-    const io = require("socket.io")(server, {
-        cors: {
-            origin: "https://hostage-hub.onrender.com",
-            methods: ["GET", "POST"]
-        }
-    });
+
 });
 
-server.listen(3000, '0.0.0.0', () => {
-    console.log('🚀 Server running on port 3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });

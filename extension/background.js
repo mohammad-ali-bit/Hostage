@@ -2,7 +2,7 @@
 // Note: In a production build, you'd use a bundler, but for this vanilla MVP, we use importScripts
 importScripts('socket.io.js');
 
-const SERVER_URL = 'https://hostage-hub.onrender.com';
+const SERVER_URL = 'https://hostage-qj13.onrender.com';
 console.log('[Hostage] Socket attempt: Connecting to ' + SERVER_URL);
 
 // Connect to the local Node.js WebSocket server
