@@ -58,8 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     joinRoomBtn.onclick = () => {
         // Grab Name and Room from your HTML inputs
-        const name = document.getElementById('name-input').value.trim(); // Change ID if needed
-        const room = document.getElementById('room-input').value.trim(); // Change ID if needed
+        const name = document.getElementById('userName').value.trim(); // Change ID if needed
+        const room = document.getElementById('roomCode').value.trim(); // Change ID if needed
 
         if (!name || !room) {
             alert("Please enter both your Name and a Room ID to join!");
@@ -74,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createRoomBtn.onclick = () => {
         // Grab Name and Room from your HTML inputs
-        const name = document.getElementById('name-input').value.trim();
-        let room = document.getElementById('room-input').value.trim();
+        const name = document.getElementById('userName').value.trim();
+        let room = document.getElementById('roomCode').value.trim();
 
         if (!name) {
             alert("Please enter your Name first!");
