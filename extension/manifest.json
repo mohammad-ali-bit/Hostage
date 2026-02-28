@@ -25,5 +25,15 @@
         "16": "image_3.png",
         "48": "image_3.png",
         "128": "image_3.png"
-    }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "http://localhost:*/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ]
 }

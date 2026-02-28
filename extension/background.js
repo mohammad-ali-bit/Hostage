@@ -146,3 +146,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.tabs.create({ url: request.url });
   }
 });
+// background.js
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // Check if the message is specifically for updating the timer
+  if (request.action === "updateTimerBadge") {
+
+    // Update the text on the badge (e.g., "19")
+    chrome.action.setBadgeText({
+      text: request.minutes
+    });
+
+    // Set the background color to match your UI's red alert color
+    chrome.action.setBadgeBackgroundColor({
+      color: "#E53935"
+    });
+  }
+});
