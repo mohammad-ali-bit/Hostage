@@ -5,6 +5,7 @@
     "description": "Hostage: Synchronized study session extension to keep you locked in.",
     "permissions": [
         "tabs",
+        "activeTab",
         "storage",
         "notifications",
         "alarms"

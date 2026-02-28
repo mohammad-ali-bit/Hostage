@@ -120,52 +120,22 @@ socket.on('vote_needed', (data) => {
   }
 });
 
-// Comprehensive list of distraction domains
-const BLACKLIST = ['youtube.com', 'instagram.com', 'tiktok.com', 'facebook.com', 'twitter.com', 'x.com', 'reddit.com', 'netflix.com'];
-const WHITELIST_TITLES = ['Khan Academy', 'MIT OpenCourseWare', 'Veritasium', '3Blue1Brown', 'Coursera', 'Udemy'];
-
-// Listen to tab updates to catch users navigating to distracting sites
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  // Wait for the page to fully load so the title is available
-  if (changeInfo.status === 'complete' && tab.url && currentRoom) {
-
-    // If we are on a break, ignore all distraction attempts
+  if (changeInfo.status === 'complete' && tab.url) {
+    // CRITICAL: Check the mode first
     if (currentMode === 'break') {
-      console.log("Break active. Ignoring distraction.");
+      console.log("On break - allowing distraction");
       return;
     }
 
-    try {
-      const url = new URL(tab.url);
-      const fullUrlStr = url.href.toLowerCase();
-      const pageTitle = (tab.title || '').toLowerCase();
-
-      // Intelligence: Title-Based Early Return Exception
-      // Check Whitelist BEFORE Blacklist
-      const isWhitelisted = WHITELIST_TITLES.some(keyword => pageTitle.includes(keyword.toLowerCase()));
-
-      if (isWhitelisted) {
-        console.log(`[Hostage] Educational content detected via Title: ${tab.title}. Exception granted.`);
-        return; // Do not trigger distraction, exit immediately
-      }
-
-      // Only check the Blacklist if NOT whitelisted
-      const isDistracted = BLACKLIST.some(domain => url.hostname.includes(domain));
-
-      if (isDistracted && !hasCausedFailure) {
-        console.warn(`[Hostage] Distraction detected (${url.hostname})! Requesting Exception...`);
-        // We do NOT set hasCausedFailure = true yet, because they might be pardoned!
-
-        // Notify the server to start a vote
-        socket.emit('request_exception', {
-          room: currentRoom,
-          name: userName,
-          url: url.hostname,
-          siteTitle: tab.title || url.hostname
-        });
-      }
-    } catch (e) {
-      console.error('Invalid URL error:', e);
+    const BLACKLIST = ['youtube.com', 'netflix.com', 'instagram.com', 'facebook.com'];
+    if (BLACKLIST.some(site => tab.url.includes(site))) {
+      chrome.storage.local.get(['userName', 'roomCode'], (data) => {
+        if (data.userName && data.roomCode) {
+          socket.emit('join_room', { name: data.userName, room: data.roomCode });
+          socket.emit('distraction_attempt', { name: data.userName, room: data.roomCode, site: tab.url });
+        }
+      });
     }
   }
 });
