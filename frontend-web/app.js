@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SERVER_URL = 'https://hostage-qj13.onrender.com';
     const socket = io(SERVER_URL, {
         transports: ["websocket", "polling"] // Ensures compatibility
+        , secure: true
     });
     let currentRoomCode = null;
     window.currentUserName = null;
@@ -56,9 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     createRoomBtn.innerText = 'Start New Session';
 
     joinRoomBtn.onclick = () => {
-        // 1. Grab Name and Room from your HTML inputs (Replace 'name-input' and 'room-input' with your actual IDs)
-        const name = document.getElementById('name-input').value.trim();
-        const room = document.getElementById('room-input').value.trim();
+        // Grab Name and Room from your HTML inputs
+        const name = document.getElementById('name-input').value.trim(); // Change ID if needed
+        const room = document.getElementById('room-input').value.trim(); // Change ID if needed
 
         if (!name || !room) {
             alert("Please enter both your Name and a Room ID to join!");
@@ -72,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     createRoomBtn.onclick = () => {
+        // Grab Name and Room from your HTML inputs
         const name = document.getElementById('name-input').value.trim();
         let room = document.getElementById('room-input').value.trim();
 
@@ -80,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-
         if (!room) {
             room = Math.random().toString(36).substring(2, 8).toUpperCase();
         }
@@ -88,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.currentUserName = name;
         currentRoomCode = room.toUpperCase();
 
-
+        // ONLY ask for minutes, nothing else
         const workMins = parseInt(prompt("Enter Work Mins (e.g., 25):")) || 25;
         const breakMins = parseInt(prompt("Enter Break Mins (e.g., 5):")) || 5;
 
@@ -99,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
             breakMins: breakMins
         });
     };
-
     socket.on('error', (msg) => alert(msg));
 
     // Deleted old room_users listener to prevent format conflicts
