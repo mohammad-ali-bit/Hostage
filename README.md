@@ -4,7 +4,7 @@
 **Theme A: Attention Economy on Campus**
 
 [![Hackathon](https://img.shields.io/badge/Hackathon-Insomniac_'26-blueviolet)](https://hacksprint.com)\
-[![Status](https://img.shields.io/badge/Status-MVP_Incomplete-success)]()
+[![Status](https://img.shields.io/badge/Status-MVP_Complete-success)]()
 
 ------------------------------------------------------------------------
 
@@ -13,16 +13,16 @@
 College isn't short on time --- it's short on attention.
 
 Traditional app blockers fail because it's too easy to bypass personal
-restrictions.\
+restrictions.
 **Hostage** fixes this by weaponizing peer pressure.
 
 Hostage is a browser extension where study partners lock into a
-synchronized focus session.\
+synchronized focus session.
 If **anyone** in the group opens a blacklisted distracting site (like
 YouTube or Instagram) before the timer finishes:
 
--   ❌ The entire session breaks for everyone\
--   🔔 The group is notified\
+-   ❌ The entire session breaks for everyone
+-   🔔 The group is notified
 -   👀 The distractor is publicly exposed
 
 Focus becomes a shared responsibility.
@@ -31,27 +31,27 @@ Focus becomes a shared responsibility.
 
 ## ✨ Core Features (24-Hour MVP)
 
--   🔄 **Real-Time Sync**\
+-   🔄 **Real-Time Sync**
     WebSockets ensure all participants share the exact same countdown
     experience.
 
--   👁️ **Active Tab Monitoring**\
+-   👁️ **Active Tab Monitoring**
     Continuously tracks opened URLs against a customizable blacklist.
 
--   🚨 **The "Shame" Trigger**\
+-   🚨 **The "Shame" Trigger**
     Instantly terminates the session and sends group notifications when
-    a distraction occurs.
+    a distraction occurs and the violator into the **wall of Shame**.
 
--   🌐 **Graceful Disconnects**\
-    Handles Wi-Fi drops by pausing the timer instead of failing the
-    session.
+-   ⚖️ **The Jury is summoned**
+    Peers must vote in real-time to allow a break or deny it.
+
 
 ------------------------------------------------------------------------
 
 ## 🚀 How to Run and Test Locally
 
 Because this is a Chrome Extension, it cannot be hosted on a standard
-web domain.\
+web domain.
 Follow the steps below to run both the backend server and the extension
 locally.
 
@@ -62,49 +62,34 @@ locally.
 The Node.js server handles WebSocket connections (the multiplayer
 aspect).
 
-1.  Clone the repository:
+- Visit the live dashboard to join or create a study room:
+    [hostage](https://hostage-qj13.onrender.com)
 
-``` bash
-git clone https://github.com/mohammad-ali-bit/hostage.git
-cd hostage-study-app/backend
-```
+### 🧩 Part 2: Install the Enforcer (Chrome Extension)
+- Download the /extension folder from this repository.
 
-2.  Install dependencies:
+- Open ```chrome://extensions/``` in Google Chrome.
 
-``` bash
-npm install
-```
+- Enable Developer Mode.
 
-3.  Start the server:
+- Click Load unpacked and select the folder.
 
-``` bash
-node server.js
-```
+The extension is pre-configured to communicate with the Render cloud production server.
 
-The server should now be running at:
+## 💻 Tech Stack
+### Frontend & Extension
+- Vanilla JavaScript & HTML5: Optimized for zero-latency DOM manipulation.
 
-    http://localhost:3000
+- Chrome Extensions API (Manifest V3): Utilizing Service Workers for background tab monitoring.
 
-------------------------------------------------------------------------
+### Backend (The Brain)
+- Node.js & Express: Unified monorepo serving both the API and the static web assets.
 
-### 🧩 Part 2: Install the Chrome Extension
+- Socket.io: Full-duplex WebSocket communication for real-time state synchronization.
 
-1.  Open Google Chrome and go to:
-
-```{=html}
-<!-- -->
-```
-    chrome://extensions/
-
-2.  Enable **Developer Mode** (top right corner)
-
-3.  Click **Load unpacked**
-
-4.  Select the `extension` folder inside the cloned repository
-
-5.  Pin the Hostage extension to your browser toolbar
-
-------------------------------------------------------------------------
+## 🔒 Engineering Highlights
+Cross-Platform Sync: Solved the "Mixed Content" hurdle by enforcing WSS (Secure WebSockets) and unified domain routing, allowing the extension to talk to the web hub seamlessly.
+---
 
 ## 🧪 How to Demo the "Hostage" Mechanic
 
@@ -130,7 +115,7 @@ In one of the windows:
 You'll see:
 
 -   The session instantly terminates in both windows\
--   A failure alert appears
+-   A voting alert appears
 
 The distraction affects everyone.
 
@@ -153,7 +138,7 @@ The distraction affects everyone.
 
 ### Deployment
 
-(Optional) Add your Render/Railway backend deployment link here
+ Render backend deployment link here (https://hostage-qj13.onrender.com)
 
 ------------------------------------------------------------------------
 
@@ -161,3 +146,4 @@ The distraction affects everyone.
 
 **\[Mohammad Ali]**\
 Solo Developer
+IIT Jodhpur
